@@ -1,0 +1,62 @@
+openapi: 3.0.3
+info:
+    title: Lumen
+    description: ''
+    version: 1.0.0
+servers:
+    -
+        url: 'http://localhost'
+paths:
+    /:
+        get:
+            summary: ''
+            description: ''
+            parameters:
+                -
+                    in: header
+                    name: Content-Type
+                    description: ''
+                    example: application/json
+                    schema:
+                        type: string
+                -
+                    in: header
+                    name: Accept
+                    description: ''
+                    example: application/json
+                    schema:
+                        type: string
+            responses:
+                200:
+                    description: ''
+                    content:
+                        text/plain:
+                            schema:
+                                type: string
+                                example: 'Lumen (8.0.1) (Laravel Components ^8.0)'
+            tags:
+                - Endpoints
+            security: []
+    /registration:
+        post:
+            summary: 'Create a new controller instance.'
+            description: ''
+            parameters:
+                -
+                    in: header
+                    name: Content-Type
+                    description: ''
+                    example: application/json
+                    schema:
+                        type: string
+                -
+                    in: header
+                    name: Accept
+                    description: ''
+                    example: application/json
+                    schema:
+                        type: string
+            responses: {  }
+            tags:
+                - Endpoints
+            security: []
