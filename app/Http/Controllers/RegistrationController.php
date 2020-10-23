@@ -21,17 +21,13 @@ class RegistrationController extends Controller
         $data = $this->validate($request, $this->rules);
 
         try {
-            if(User::emailExists($data['email'])){
-                return response()->json(['message' => 'Email já está em uso'], 409);    
-            }
-
             $data['password'] = app('hash')->make('password');
 
             $user = User::create($data);
             
             return response()->json(['created' => $user], 200);
         } catch (\Throwable $th) {
-            return response()->json('Falha ao criar usuário.' . $th->getMessage(), 500);
+            return response()->json($th->getTrace(), 500);
         }
     }
 }
