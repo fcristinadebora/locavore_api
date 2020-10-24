@@ -17,7 +17,12 @@ $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
-$router->post('/registration', [
-    'as' => 'registration.create',
-    'uses' => 'RegistrationController@create'
+$router->post('/register', [
+    'as' => 'auth.register',
+    'uses' => 'AuthController@register'
+]);
+
+$router->post('/login', [
+    'as' => 'auth.login',
+    'uses' => 'AuthController@login'
 ]);

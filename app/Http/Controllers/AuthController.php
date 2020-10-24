@@ -1,15 +1,16 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use Validator;
 use App\Models\User;
 use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Firebase\JWT\ExpiredException;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
-class UserAuthController extends BaseController 
+class AuthController extends BaseController
 {
     /**
      * The request instance.
@@ -24,7 +25,8 @@ class UserAuthController extends BaseController
      * @param  \Illuminate\Http\Request  $request
      * @return void
      */
-    public function __construct(Request $request) {
+    public function __construct(Request $request)
+    {
         $this->request = $request;
     }
 
@@ -34,18 +36,19 @@ class UserAuthController extends BaseController
      * @param  \App\User   $user
      * @return string
      */
-    protected function jwt(User $user) {
+    protected function jwt(User $user)
+    {
         $payload = [
             'iss' => "lumen-jwt", // Issuer of the token
             'sub' => $user->id, // Subject of the token
             'iat' => time(), // Time when JWT was issued. 
-            'exp' => time() + 60*60*24*365*5 // Expiration time = 5 years
+            'exp' => time() + 60 * 60 * 24 * 365 * 5 // Expiration time = 5 years
         ];
-        
+
         // As you can see we are passing `JWT_SECRET` as the second parameter that will 
         // be used to decode the token in the future.
         return JWT::encode($payload, env('JWT_SECRET'));
-    } 
+    }
 
     /**
      * Authenticate a user and return the token if the provided credentials are correct.
@@ -53,33 +56,57 @@ class UserAuthController extends BaseController
      * @param  \App\User   $user 
      * @return mixed
      */
-    public function authenticate(User $user) {
+    public function login(User $user)
+    {
         $this->validate($this->request, [
-            'login'     => 'required|string',
-            'senha'  => 'required|string'
+            'email'     => 'required|email|string',
+            'password'  => 'required|string'
         ]);
 
-        // Find the user by matricula and cpf
-        $user = User::autenticar($this->request->input('login'), $this->request->input('senha'));
-        
-        if (!$user) {
-            // You wil probably have some sort of helpers or whatever
-            // to make sure that you have the same response format for
-            // differents kind of responses. But let's return the 
-            // below respose for now.
+        $user = User::where('email', $this->request->email)->first();
+
+        if(!$user){
             return response()->json([
-                'error' => 'Usuário não identificado'
+                'message' => 'E-mail não cadastrado'
             ], 400);
         }
 
+        if(!Hash::check($this->request->password, $user->password)){
+            return response()->json([
+                'message' => 'Usuário ou senha incorretos'
+            ], 400);
+        }
 
         return response()->json([
-                'token' => $this->jwt($user),
-                'user' => $user
-            ], 200);
+            'token' => $this->jwt($user),
+            'user' => $user
+        ], 200);
     }
 
-    public function check (Request $request) {
+    public function check(Request $request)
+    {
         return response()->json('OK', 200);
+    }
+
+    public function register(Request $request)
+    {
+        $data = $this->validate($request, [
+            'name' => 'required|string',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string'
+        ]);
+
+        try {
+            $data['password'] = Hash::make($data['password']);
+
+            $user = User::create($data);
+
+            return response()->json([
+                'created' => $user,
+                'token' => $this->jwt($user)
+            ] , 200);
+        } catch (\Throwable $th) {
+            return response()->json($th->getTrace(), 500);
+        }
     }
 }
