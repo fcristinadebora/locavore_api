@@ -26,3 +26,12 @@ $router->post('/login', [
     'as' => 'auth.login',
     'uses' => 'AuthController@login'
 ]);
+
+$router->group([
+    'middleware' => 'jwt.auth:public'
+], function () use ($router) {
+    $router->get('/authenticated', [
+        'as' => 'auth.authenticated',
+        'uses' => 'AuthController@authenticated'
+    ]);;
+});

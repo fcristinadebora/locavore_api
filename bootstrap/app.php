@@ -72,6 +72,10 @@ $app->configure('app');
 |
 */
 
+$app->routeMiddleware([
+    'jwt.auth' => App\Http\Middleware\JwtMiddleware::class,
+]);
+
 $app->middleware([
     App\Http\Middleware\CorsMiddleware::class
 ]);

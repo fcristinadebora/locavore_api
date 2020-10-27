@@ -83,11 +83,6 @@ class AuthController extends BaseController
         ], 200);
     }
 
-    public function check(Request $request)
-    {
-        return response()->json('OK', 200);
-    }
-
     public function register(Request $request)
     {
         $data = $this->validate($request, [
@@ -108,5 +103,14 @@ class AuthController extends BaseController
         } catch (\Throwable $th) {
             return response()->json($th->getTrace(), 500);
         }
+    }
+
+    public function authenticated(Request $request){
+        return response()->json([
+            'user' => [
+                'name' => $request->auth->name,
+                'email' => $request->auth->email
+            ]
+        ], 200);
     }
 }
