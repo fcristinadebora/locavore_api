@@ -32,7 +32,7 @@ $router->get('/tags', [
     'uses' => 'TagsController@get'
 ]);
 
-$router->get('/growers/{id}/', [
+$router->get('/growers/{id}', [
     'as' => 'growers.show',
     'uses' => 'GrowersController@show'
 ]);
@@ -40,14 +40,19 @@ $router->get('/growers/{id}/', [
 $router->group([
     'middleware' => 'jwt.auth:user'
 ], function () use ($router) {
-    $router->put('/users/{id}/', [
+    $router->put('/users/{id}', [
         'as' => 'users.update',
         'uses' => 'UsersController@update'
     ]);
 
-    $router->put('/growers/{id}/', [
+    $router->put('/growers/{id}', [
         'as' => 'growers.update',
         'uses' => 'GrowersController@update'
+    ]);
+
+    $router->post('/images', [
+        'as' => 'images.create',
+        'uses' => 'ImagesController@create'
     ]);
 });
 
