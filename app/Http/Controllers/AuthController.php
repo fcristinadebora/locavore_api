@@ -109,7 +109,8 @@ class AuthController extends BaseController
         return response()->json([
             'user' => [
                 'name' => $request->auth->name,
-                'email' => $request->auth->email
+                'email' => $request->auth->email,
+                'isGrower' => $request->auth->is_grower
             ]
         ], 200);
     }

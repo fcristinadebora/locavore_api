@@ -30,10 +30,4 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     protected $hidden = [
         'password',
     ];
-
-    public static function emailExists(String $email) {
-        $user = self::where('email', $email)->count();
-
-        return !!$user;
-    }
 }
