@@ -24,4 +24,8 @@ class GrowerUser extends User
     public function products(){
         return $this->hasMany('App\Models\Product', 'user_id', 'id');
     }
+
+    public function images(){
+        return $this->hasMany('App\Models\ImageUser', 'user_id', 'id')->orderBy('id', 'desc');
+    }
 }

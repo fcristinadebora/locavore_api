@@ -97,4 +97,54 @@ class GrowersController extends Controller
 
         return $newCategories;
     }
+
+    public function attachImage(Request $request, $id){
+        $data = $this->validate($request, [
+            'images' => 'required|array',
+            'images.*' => 'required|numeric|exists:images,id'
+        ]);
+
+        try {
+            $product = GrowerUser::find($id);
+        }catch (\Throwable $th) {
+            return response()->json(['message' => 'GrowerUser not found'], 404);
+        }
+
+        try {
+            $images_create = [];
+            foreach ($data['images'] as $value) {
+                $images_create[] = [
+                    'product_id' => $id,
+                    'image_id' => $value,
+                ];
+            }
+            $product->images()->createMany($images_create);
+
+            return response()->json(['success' => true], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => $th->getMessage(),
+                'trace' => $th->getTrace()
+            ], 500);
+        }
+    }
+
+    public function getImages(Request $request, $id){
+        try {
+            $product = GrowerUser::find($id);
+        }catch (\Throwable $th) {
+            return response()->json(['message' => 'GrowerUser not found'], 404);
+        }
+
+        try {
+            $product->load('images.image');
+
+            return response()->json(['images' => $product->images], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => $th->getMessage(),
+                'trace' => $th->getTrace()
+            ], 500);
+        }
+    }
 }

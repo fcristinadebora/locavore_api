@@ -12,7 +12,7 @@ class ProductsController extends Controller
         'name' => 'required|string',
         'description' => 'nullable|string',
         'price' => "nullable|numeric",
-        'user_id' => 'nullable|numeric|exists:users,id',
+        'user_id' => 'required|numeric|exists:users,id',
         'product_category_id' => 'required|numeric|exists:product_categories,id',
         'tags' => 'nullable|array'
     ];

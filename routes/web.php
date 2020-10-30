@@ -58,10 +58,9 @@ $router->group([
         'uses' => 'UsersController@update'
     ]);
 
-    $router->put('/growers/{id}', [
-        'as' => 'growers.update',
-        'uses' => 'GrowersController@update'
-    ]);
+    $router->put('/growers/{id}', ['as' => 'growers.update','uses' => 'GrowersController@update']);
+    $router->post('/growers/images/{id}', ['as' => 'growers.attachImage', 'uses' => 'GrowersController@attachImage']);
+    $router->get('/growers/images/{id}', ['as' => 'growers.getImages', 'uses' => 'GrowersController@getImages']);
 
     $router->post('/images', ['as' => 'images.create', 'uses' => 'ImagesController@create']);
     $router->post('/images-multiple', ['as' => 'images.createMultiple','uses' => 'ImagesController@createMultiple' ]);

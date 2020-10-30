@@ -108,6 +108,7 @@ class AuthController extends BaseController
     public function authenticated(Request $request){
         return response()->json([
             'user' => [
+                'id' => $request->auth->id,
                 'name' => $request->auth->name,
                 'email' => $request->auth->email,
                 'is_grower' => $request->auth->is_grower
