@@ -30,4 +30,8 @@ class Product extends Model
     public function tags(){
         return $this->hasMany('App\Models\ProductTag', 'product_id', 'id');
     }
+
+    public function images(){
+        return $this->hasMany('App\Models\ImageProduct', 'product_id', 'id');
+    }
 }

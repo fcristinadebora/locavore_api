@@ -47,6 +47,8 @@ $router->get('/products/{id}', ['as' => 'products.show','uses' => 'ProductsContr
 $router->post('/products', ['as' => 'products.create', 'uses' => 'ProductsController@create']);
 $router->put('/products/{id}', ['as' => 'products.update','uses' => 'ProductsController@update']);
 $router->delete('/products/{id}', ['as' => 'products.delete','uses' => 'ProductsController@delete']);
+$router->post('/products/images/{id}', ['as' => 'products.attachImage', 'uses' => 'ProductsController@attachImage']);
+$router->get('/products/images/{id}', ['as' => 'products.getImages', 'uses' => 'ProductsController@getImages']);
 
 $router->group([
     'middleware' => 'jwt.auth:user'
@@ -61,10 +63,10 @@ $router->group([
         'uses' => 'GrowersController@update'
     ]);
 
-    $router->post('/images', [
-        'as' => 'images.create',
-        'uses' => 'ImagesController@create'
-    ]);
+    $router->post('/images', ['as' => 'images.create', 'uses' => 'ImagesController@create']);
+    $router->post('/images-multiple', ['as' => 'images.createMultiple','uses' => 'ImagesController@createMultiple' ]);
+    $router->put('/images/{id}', ['as' => 'images.update','uses' => 'ImagesController@update']);
+    $router->delete('/images/{id}', ['as' => 'images.delete','uses' => 'ImagesController@delete']);        
 });
 
 $router->group([
