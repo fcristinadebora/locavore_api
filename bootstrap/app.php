@@ -7,7 +7,6 @@ require_once __DIR__.'/../vendor/autoload.php';
 ))->bootstrap();
 
 date_default_timezone_set(env('APP_TIMEZONE', 'UTC'));
-
 /*
 |--------------------------------------------------------------------------
 | Create The Application

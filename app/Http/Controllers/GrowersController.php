@@ -16,6 +16,10 @@ class GrowersController extends Controller
                 $growerUser->load('identificationTags.tag');
             }
 
+            if($request->get('with_categories') == true){
+                $growerUser->load('productCategories.productCategory');
+            }
+
             return response()->json(['grower' => $growerUser], 200);
         } catch (\Throwable $th) {
             response()->json(['error' => $th->getTrace()], 500);
@@ -32,6 +36,7 @@ class GrowersController extends Controller
             'description' => 'nullable|string',
             'is_grower' => 'required|boolean',
             'tags' => 'nullable|array',
+            'categories' => 'nullable|array',
             'profile_file_name' => 'nullable|string',
             'profile_file_path' => 'nullable|string',
             'image_id' => 'nullable|numeric|exists:images,id'
@@ -60,6 +65,9 @@ class GrowersController extends Controller
             $growerUser->identificationTags()->delete();
             $growerUser->identificationTags()->createMany($this->mapTags($data['tags']));
 
+            $growerUser->productCategories()->delete();
+            $growerUser->productCategories()->createMany($this->mapCategories($data['categories']));
+
             return response()->json(['updated' => $growerUser], 200);
         } catch (\Throwable $th) {
             response()->json(['error' => $th->getTrace()], 500);
@@ -80,5 +88,13 @@ class GrowersController extends Controller
         }, $tags);
 
         return $newTags;
+    }
+
+    private function mapCategories($categories){
+        $newCategories = array_map(function ($category) {
+            return ['product_category_id' => $category];
+        }, $categories);
+
+        return $newCategories;
     }
 }

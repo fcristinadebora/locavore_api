@@ -32,10 +32,21 @@ $router->get('/tags', [
     'uses' => 'TagsController@get'
 ]);
 
+$router->get('/product-categories', [
+    'as' => 'productCategories.get',
+    'uses' => 'ProductCategoriesController@get'
+]);
+
 $router->get('/growers/{id}', [
     'as' => 'growers.show',
     'uses' => 'GrowersController@show'
 ]);
+
+$router->get('/products', ['as' => 'products.get','uses' => 'ProductsController@get']);
+$router->get('/products/{id}', ['as' => 'products.show','uses' => 'ProductsController@show']);
+$router->post('/products', ['as' => 'products.create', 'uses' => 'ProductsController@create']);
+$router->put('/products/{id}', ['as' => 'products.update','uses' => 'ProductsController@update']);
+$router->delete('/products/{id}', ['as' => 'products.delete','uses' => 'ProductsController@delete']);
 
 $router->group([
     'middleware' => 'jwt.auth:user'

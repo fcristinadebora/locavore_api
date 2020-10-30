@@ -16,4 +16,12 @@ class GrowerUser extends User
     public function identificationTags(){
         return $this->hasMany('App\Models\TagUserIdentified', 'user_id', 'id');
     }
+
+    public function productCategories(){
+        return $this->hasMany('App\Models\ProductCategoryUser', 'user_id', 'id');
+    }
+
+    public function products(){
+        return $this->hasMany('App\Models\Product', 'user_id', 'id');
+    }
 }

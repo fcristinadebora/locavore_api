@@ -110,7 +110,7 @@ class AuthController extends BaseController
             'user' => [
                 'name' => $request->auth->name,
                 'email' => $request->auth->email,
-                'isGrower' => $request->auth->is_grower
+                'is_grower' => $request->auth->is_grower
             ]
         ], 200);
     }
