@@ -47,6 +47,10 @@ $router->delete('/products/{id}', ['as' => 'products.delete','uses' => 'Products
 $router->post('/products/images/{id}', ['as' => 'products.attachImage', 'uses' => 'ProductsController@attachImage']);
 $router->get('/products/images/{id}', ['as' => 'products.getImages', 'uses' => 'ProductsController@getImages']);
 
+$router->get('/favorites', ['as' => 'favorites.get','uses' => 'UserFavoritesController@get']);
+$router->post('/favorites', ['as' => 'favorites.create', 'uses' => 'UserFavoritesController@create']);
+$router->delete('/favorites/{id}', ['as' => 'favorites.delete','uses' => 'UserFavoritesController@delete']);
+
 $router->group([
     'middleware' => 'jwt.auth:user'
 ], function () use ($router) {
