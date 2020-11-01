@@ -30,4 +30,8 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     protected $hidden = [
         'password',
     ];
+
+    public function addresses() {
+        return $this->hasMany('App\Models\Address', 'user_id', 'id');
+    }
 }

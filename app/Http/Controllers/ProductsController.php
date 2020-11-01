@@ -1,10 +1,13 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 use App\Models\Product;
 use App\Models\Tag;
+use App\Libraries\StringHelper;
 
 class ProductsController extends Controller
 {
@@ -17,25 +20,102 @@ class ProductsController extends Controller
         'tags' => 'nullable|array'
     ];
 
-    public function get(Request $request){
-        try {
-            $products = Product::where(function ($query) use ($request) {
-                if($request->get('user_id')){
-                    $query->where('user_id', $request->get('user_id'));
+    public function get(Request $request)
+    {
+        // try {
+        $products = Product::select('products.id','products.name','products.price', 'products.user_id', 'products.product_category_id')
+            ->with('productCategory')
+            ->with([
+                'grower.addresses',
+                'images' => function ($query) {
+                    $query->with('image')->first();
                 }
-            })->orderBy('id', 'desc')->paginate();
+            ])
+            ->where(function ($query) use ($request) {
+                if ($request->get('user_id')) {
+                    $query->where('products.user_id', $request->get('user_id'));
+                }
 
-            return response()->json($products, 200);
-        } catch (\Throwable $th) {
-            response()->json(['error' => $th->getTrace()], 500);
+                if ($request->get('search_string')) {
+                    $searchWords = StringHelper::WordsExplode($request->get('search_string'));
+                    $query->where(function ($query) use ($searchWords) {
+                        foreach ($searchWords as $word) {
+                            $word = $word[0];
+                            echo $word . '<br>';
+                            $query->orWhere('products.name', 'like', "%$word%")
+                                ->orWhereHas('tags', function ($query) use ($word) {
+                                    $query->whereHas('tag', function ($query) use ($word) {
+                                        $query->where('description', 'like', "%$word%");
+                                    });
+                                });
+                        }
+                    });
+                }
+            })->join('users', function ($join) {
+                $join->on('products.user_id', '=', 'users.id')
+                    ->where('users.is_grower', TRUE);
+            })->join('addresses', 'addresses.user_id', '=', 'users.id');
+
+        if ($request->get('city')) {
+            $products = $products->where('addresses.city', $request->get('city'));
         }
+        if ($request->get('state')) {
+            $products = $products->where('addresses.state', $request->get('state'));
+        }
+
+        if ($request->get('lat') && $request->get('long')) {
+            $lat = $request->get('lat');
+            $long = $request->get('long');
+
+            $products = $products->addSelect(DB::raw("(
+                            6371 *
+                            acos(cos(radians($lat)) * 
+                            cos(radians(addresses.lat)) * 
+                            cos(radians(addresses.long) - 
+                            radians($long)) + 
+                            sin(radians($lat)) * 
+                            sin(radians(addresses.lat)))
+                        ) AS distance "));
+
+            if ($request->get('order_by') == 'distance') {
+                $products = $products->orderBy('distance', 'asc');
+            }
+        } else {
+            $products = $products->addSelect(DB::raw("null AS distance"));
+        }
+
+        if ($request->get('order_by') == 'distance') {
+            $products->addSelect("addresses.street", "addresses.number", "addresses.district", "addresses.city", "addresses.state", "addresses.complement");
+            $products = $products->orderBy('products.name', 'desc');
+        } else {
+            $products = $products->orderBy('products.id', 'desc');
+        }
+
+        if($request->get('unique') == true){
+            $products = $products->groupBy(
+                'id',
+                'distance',
+                'name',
+                'price',
+                'product_category_id',
+                'user_id'
+            );
+        }
+
+        $products = $products->paginate();
+
+        return response()->json($products, 200);
+        // } catch (\Exception $th) {
+        //     response()->json(['error' => $th->getTrace()], 500);
+        // }
     }
 
-    public function show(Request $request, $id){
+    public function show(Request $request, $id)
+    {
         try {
             $product = Product::find($id);
 
-            if($request->get('with_tags') == true){
+            if ($request->get('with_tags') == true) {
                 $product->load('tags.tag');
             }
 
@@ -45,7 +125,8 @@ class ProductsController extends Controller
         }
     }
 
-    public function delete(Request $request, $id){
+    public function delete(Request $request, $id)
+    {
         try {
             $product = Product::find($id);
             $product->delete();
@@ -56,9 +137,10 @@ class ProductsController extends Controller
         }
     }
 
-    public function create(Request $request){
+    public function create(Request $request)
+    {
         $data = $this->validate($request, $this->rules);
-        
+
         try {
             $created = Product::create($data);
 
@@ -70,16 +152,17 @@ class ProductsController extends Controller
         }
     }
 
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         $request['id'] = $id;
 
         $this->rules['id'] = 'required|numeric|exists:products,id';
 
         $data = $this->validate($request, $this->rules);
-        
+
         try {
             $product = Product::find($id);
-        }catch (\Throwable $th) {
+        } catch (\Throwable $th) {
             return response()->json(['message' => 'Product not found'], 404);
         }
 
@@ -99,13 +182,14 @@ class ProductsController extends Controller
         }
     }
 
-    private function mapTags($tags){
+    private function mapTags($tags)
+    {
         $newTags = array_map(function ($tag) {
-            if(isset($tag['type']) && $tag['type'] == 'new'){
+            if (isset($tag['type']) && $tag['type'] == 'new') {
                 $created = Tag::create([
                     'description' => $tag['description']
                 ]);
-                
+
                 return ['tag_id' => $created['id']];
             }
 
@@ -115,7 +199,8 @@ class ProductsController extends Controller
         return $newTags;
     }
 
-    public function attachImage(Request $request, $id){
+    public function attachImage(Request $request, $id)
+    {
         $data = $this->validate($request, [
             'images' => 'required|array',
             'images.*' => 'required|numeric|exists:images,id'
@@ -123,7 +208,7 @@ class ProductsController extends Controller
 
         try {
             $product = Product::find($id);
-        }catch (\Throwable $th) {
+        } catch (\Throwable $th) {
             return response()->json(['message' => 'Product not found'], 404);
         }
 
@@ -146,10 +231,11 @@ class ProductsController extends Controller
         }
     }
 
-    public function getImages(Request $request, $id){
+    public function getImages(Request $request, $id)
+    {
         try {
             $product = Product::find($id);
-        }catch (\Throwable $th) {
+        } catch (\Throwable $th) {
             return response()->json(['message' => 'Product not found'], 404);
         }
 
