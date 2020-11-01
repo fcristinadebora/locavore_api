@@ -36,10 +36,8 @@ $router->get('/product-categories', [
     'uses' => 'ProductCategoriesController@get'
 ]);
 
-$router->get('/growers/{id}', [
-    'as' => 'growers.show',
-    'uses' => 'GrowersController@show'
-]);
+$router->get('/growers', ['as' => 'growers.get','uses' => 'GrowersController@get']);
+$router->get('/growers/{id}', ['as' => 'growers.show','uses' => 'GrowersController@show']);
 
 $router->get('/products', ['as' => 'products.get','uses' => 'ProductsController@get']);
 $router->get('/products/{id}', ['as' => 'products.show','uses' => 'ProductsController@show']);

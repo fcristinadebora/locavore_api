@@ -1,13 +1,87 @@
 <?php
 
 namespace App\Http\Controllers;
+
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use App\Libraries\StringHelper;
 use App\Models\GrowerUser;
 use App\Models\Tag;
 use App\Models\Image;
 
 class GrowersController extends Controller
 {
+    public function get(Request $request)
+    {
+        // try {
+        $growers = GrowerUser::select('users.id','users.name','users.profile_file_name','users.profile_file_path')
+            ->with(['productCategories.productCategory', 'identificationTags.tag'])
+            ->with([
+                'addresses',
+                'images' => function ($query) {
+                    $query->with('image')->first();
+                }
+            ])
+            ->where(function ($query) use ($request) {
+                if ($request->get('search_string')) {
+                    $searchWords = StringHelper::WordsExplode($request->get('search_string'));
+                    $query->where(function ($query) use ($searchWords) {
+                        foreach ($searchWords as $word) {
+                            $word = $word[0];
+                            $query->orWhere('users.name', 'like', "%$word%")
+                                ->orWhereHas('identificationTags', function ($query) use ($word) {
+                                    $query->whereHas('tag', function ($query) use ($word) {
+                                        $query->where('description', 'like', "%$word%");
+                                    });
+                                });
+                        }
+                    });
+                }
+            })->join('addresses', 'addresses.user_id', '=', 'users.id');
+
+        if ($request->get('city')) {
+            $growers = $growers->where('addresses.city', $request->get('city'));
+        }
+        if ($request->get('state')) {
+            $growers = $growers->where('addresses.state', $request->get('state'));
+        }
+
+        if ($request->get('lat') && $request->get('long')) {
+            $lat = $request->get('lat');
+            $long = $request->get('long');
+
+            $growers = $growers->addSelect(DB::raw("(
+                            6371 *
+                            acos(cos(radians($lat)) * 
+                            cos(radians(addresses.lat)) * 
+                            cos(radians(addresses.long) - 
+                            radians($long)) + 
+                            sin(radians($lat)) * 
+                            sin(radians(addresses.lat)))
+                        ) AS distance "));
+
+            if ($request->get('order_by') == 'distance') {
+                $growers = $growers->orderBy('distance', 'asc');
+            }
+        } else {
+            $growers = $growers->addSelect(DB::raw("null AS distance"));
+        }
+
+        if ($request->get('order_by') == 'distance') {
+            $growers->addSelect("addresses.street", "addresses.number", "addresses.district", "addresses.city", "addresses.state", "addresses.complement");
+            $growers = $growers->orderBy('users.name', 'desc');
+        } else {
+            $growers = $growers->orderBy('users.id', 'desc');
+        }
+
+        $growers = $growers->paginate();
+
+        return response()->json($growers, 200);
+        // } catch (\Exception $th) {
+        //     response()->json(['error' => $th->getTrace()], 500);
+        // }
+    }
+
     public function show(Request $request, $id){
         try {
             $growerUser = GrowerUser::find($id);

@@ -23,10 +23,11 @@ class ProductsController extends Controller
     public function get(Request $request)
     {
         // try {
-        $products = Product::select('products.id','products.name','products.price', 'products.user_id', 'products.product_category_id')
+        $products = Product::select('products.id','products.name','products.description','products.price', 'products.user_id', 'products.product_category_id')
             ->with('productCategory')
             ->with([
                 'grower.addresses',
+                'tags.tag',
                 'images' => function ($query) {
                     $query->with('image')->first();
                 }
@@ -41,7 +42,6 @@ class ProductsController extends Controller
                     $query->where(function ($query) use ($searchWords) {
                         foreach ($searchWords as $word) {
                             $word = $word[0];
-                            echo $word . '<br>';
                             $query->orWhere('products.name', 'like', "%$word%")
                                 ->orWhereHas('tags', function ($query) use ($word) {
                                     $query->whereHas('tag', function ($query) use ($word) {
@@ -98,7 +98,8 @@ class ProductsController extends Controller
                 'name',
                 'price',
                 'product_category_id',
-                'user_id'
+                'user_id',
+                'description'
             );
         }
 
