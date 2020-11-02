@@ -51,6 +51,16 @@ $router->get('/favorites', ['as' => 'favorites.get','uses' => 'UserFavoritesCont
 $router->post('/favorites', ['as' => 'favorites.create', 'uses' => 'UserFavoritesController@create']);
 $router->delete('/favorites/{id}', ['as' => 'favorites.delete','uses' => 'UserFavoritesController@delete']);
 
+$router->get('/interests', ['as' => 'interests.get','uses' => 'InterestsController@get']);
+$router->post('/interests', ['as' => 'interests.create', 'uses' => 'InterestsController@create']);
+$router->delete('/interests/{id}', ['as' => 'interests.delete','uses' => 'InterestsController@delete']);
+
+$router->get('/addresses', ['as' => 'addresses.get','uses' => 'AddressesController@get']);
+$router->get('/addresses/{id}', ['as' => 'addresses.show','uses' => 'AddressesController@show']);
+$router->post('/addresses', ['as' => 'addresses.create', 'uses' => 'AddressesController@create']);
+$router->put('/addresses/{id}', ['as' => 'addresses.update','uses' => 'AddressesController@update']);
+$router->delete('/addresses/{id}', ['as' => 'addresses.delete','uses' => 'AddressesController@delete']);
+
 $router->group([
     'middleware' => 'jwt.auth:user'
 ], function () use ($router) {

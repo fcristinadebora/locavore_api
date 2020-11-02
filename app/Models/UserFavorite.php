@@ -23,6 +23,6 @@ class UserFavorite extends Model
     }
 
     public function favoriteUser(){
-        return $this->belongsTo('App\Models\GrowerUser', 'user_id', 'id');
+        return $this->belongsTo('App\Models\GrowerUser', 'favorite_user_id', 'id');
     }
 }
