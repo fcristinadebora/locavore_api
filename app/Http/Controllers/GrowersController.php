@@ -68,7 +68,7 @@ class GrowersController extends Controller
         }
 
         if ($request->get('order_by') == 'distance') {
-            $growers->addSelect("addresses.street", "addresses.number", "addresses.district", "addresses.city", "addresses.state", "addresses.complement");
+            $growers->addSelect("addresses.street", "addresses.number", "addresses.district", "addresses.number", "addresses.name as addr_name", "addresses.lat", "addresses.long");
             $growers = $growers->orderBy('users.name', 'desc');
         } else {
             $growers = $growers->orderBy('users.id', 'desc');
@@ -83,21 +83,25 @@ class GrowersController extends Controller
     }
 
     public function show(Request $request, $id){
-        try {
-            $growerUser = GrowerUser::find($id);
+        $growerUser = GrowerUser::find($id);
 
-            if($request->get('with_tags') == true){
-                $growerUser->load('identificationTags.tag');
-            }
-
-            if($request->get('with_categories') == true){
-                $growerUser->load('productCategories.productCategory');
-            }
-
-            return response()->json(['grower' => $growerUser], 200);
-        } catch (\Throwable $th) {
-            response()->json(['error' => $th->getTrace()], 500);
+        if($request->get('with_tags') == true){
+            $growerUser->load('identificationTags.tag');
         }
+
+        if($request->get('with_images') == true){
+            $growerUser->load('images.image');
+        }
+
+        if($request->get('with_categories') == true){
+            $growerUser->load('productCategories.productCategory');
+        }
+
+        if($request->get('with_address') == true){
+            $growerUser->load('addresses.contacts');
+        }
+
+        return response()->json(['grower' => $growerUser], 200);
     }
 
     public function update(Request $request, $id){

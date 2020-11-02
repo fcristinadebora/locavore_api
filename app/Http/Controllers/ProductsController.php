@@ -29,7 +29,7 @@ class ProductsController extends Controller
                 'grower.addresses',
                 'tags.tag',
                 'images' => function ($query) {
-                    $query->with('image')->first();
+                    $query->with('image')->orderBy('id', 'asc')->first();
                 }
             ])
             ->where(function ($query) use ($request) {
@@ -85,7 +85,7 @@ class ProductsController extends Controller
         }
 
         if ($request->get('order_by') == 'distance') {
-            $products->addSelect("addresses.street", "addresses.number", "addresses.district", "addresses.city", "addresses.state", "addresses.complement");
+            $products->addSelect("addresses.street", "addresses.number", "addresses.district", "addresses.city", "addresses.state", "addresses.complement", "addresses.number", "addresses.name as addr_name", "addresses.lat", "addresses.long");
             $products = $products->orderBy('products.name', 'desc');
         } else {
             $products = $products->orderBy('products.id', 'desc');
@@ -118,6 +118,18 @@ class ProductsController extends Controller
 
             if ($request->get('with_tags') == true) {
                 $product->load('tags.tag');
+            }
+            
+            if ($request->get('with_category') == true) {
+                $product->load('productCategory');
+            }
+
+            if ($request->get('with_images') == true) {
+                $product->load('images.image');
+            }
+
+            if ($request->get('with_grower') == true) {
+                $product->load('grower');
             }
 
             return response()->json(['product' => $product], 200);

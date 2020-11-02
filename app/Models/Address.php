@@ -25,4 +25,8 @@ class Address extends Model
         'postal_code',
         'user_id'
     ];
+
+    public function contacts(){
+        return $this->hasMany('App\Models\Contact', 'address_id', 'id');
+    }
 }
