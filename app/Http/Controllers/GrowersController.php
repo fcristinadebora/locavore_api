@@ -16,6 +16,7 @@ class GrowersController extends Controller
         // try {
         $growers = GrowerUser::select('users.id','users.name','users.profile_file_name','users.profile_file_path')
             ->with(['productCategories.productCategory', 'identificationTags.tag'])
+            ->where('is_grower', true)
             ->with([
                 'addresses',
                 'images' => function ($query) {

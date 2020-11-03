@@ -56,10 +56,17 @@ $router->post('/interests', ['as' => 'interests.create', 'uses' => 'InterestsCon
 $router->delete('/interests/{id}', ['as' => 'interests.delete','uses' => 'InterestsController@delete']);
 
 $router->get('/addresses', ['as' => 'addresses.get','uses' => 'AddressesController@get']);
+$router->get('/addresses/total', ['as' => 'addresses.total','uses' => 'AddressesController@total']);
 $router->get('/addresses/{id}', ['as' => 'addresses.show','uses' => 'AddressesController@show']);
 $router->post('/addresses', ['as' => 'addresses.create', 'uses' => 'AddressesController@create']);
 $router->put('/addresses/{id}', ['as' => 'addresses.update','uses' => 'AddressesController@update']);
 $router->delete('/addresses/{id}', ['as' => 'addresses.delete','uses' => 'AddressesController@delete']);
+
+$router->get('/contacts', ['as' => 'contacts.get','uses' => 'ContactsController@get']);
+$router->get('/contacts/{id}', ['as' => 'contacts.show','uses' => 'ContactsController@show']);
+$router->post('/contacts', ['as' => 'contacts.create', 'uses' => 'ContactsController@create']);
+$router->put('/contacts/{id}', ['as' => 'contacts.update','uses' => 'ContactsController@update']);
+$router->delete('/contacts/{id}', ['as' => 'contacts.delete','uses' => 'ContactsController@delete']);
 
 $router->group([
     'middleware' => 'jwt.auth:user'

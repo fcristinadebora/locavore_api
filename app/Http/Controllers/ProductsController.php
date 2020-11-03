@@ -51,10 +51,19 @@ class ProductsController extends Controller
                         }
                     });
                 }
-            })->join('users', function ($join) {
+            });
+
+        if($request->get('unique')){
+            $products = $products->leftJoin('users', function ($join) {
+                $join->on('products.user_id', '=', 'users.id')
+                    ->where('users.is_grower', TRUE);
+            })->leftJoin('addresses', 'addresses.user_id', '=', 'users.id');
+        }else{
+            $products = $products->join('users', function ($join) {
                 $join->on('products.user_id', '=', 'users.id')
                     ->where('users.is_grower', TRUE);
             })->join('addresses', 'addresses.user_id', '=', 'users.id');
+        }
 
         if ($request->get('city')) {
             $products = $products->where('addresses.city', $request->get('city'));
