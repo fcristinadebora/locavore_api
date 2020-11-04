@@ -61,6 +61,7 @@ $router->get('/addresses/{id}', ['as' => 'addresses.show','uses' => 'AddressesCo
 $router->post('/addresses', ['as' => 'addresses.create', 'uses' => 'AddressesController@create']);
 $router->put('/addresses/{id}', ['as' => 'addresses.update','uses' => 'AddressesController@update']);
 $router->delete('/addresses/{id}', ['as' => 'addresses.delete','uses' => 'AddressesController@delete']);
+$router->put('/addresses/{id}/set-main', ['as' => 'addresses.seMain','uses' => 'AddressesController@setMain']);
 
 $router->get('/contacts', ['as' => 'contacts.get','uses' => 'ContactsController@get']);
 $router->get('/contacts/{id}', ['as' => 'contacts.show','uses' => 'ContactsController@show']);

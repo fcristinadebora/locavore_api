@@ -23,7 +23,8 @@ class Address extends Model
         'long',
         'name',
         'postal_code',
-        'user_id'
+        'user_id',
+        'is_main'
     ];
 
     public function contacts(){

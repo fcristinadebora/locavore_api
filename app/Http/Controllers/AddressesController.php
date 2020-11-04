@@ -29,6 +29,10 @@ class AddressesController extends Controller
     $data = $this->validate($request, $this->rules);
 
     try {
+      if(Address::where('user_id', $data['user_id'])->count() == 0){
+        $data['is_main'] = true;
+      }
+      
       $created = Address::create($data);
 
       return response()->json(['created' => $created], 200);
@@ -118,6 +122,29 @@ class AddressesController extends Controller
     try {
       $item = Address::find($id);
       $item->update($data);
+      
+      return response()->json(['updated' => $item], 200);
+    } catch (\Throwable $th) {
+      return response()->json([
+        'message' => $th->getMessage(),
+        'trace' => $th->getTrace()
+      ], 500);
+    }
+  }
+
+  public function setMain(Request $request, $id)
+  {
+    $request['id'] = $id;
+
+    $data = $this->validate($request, [
+      'id' => 'required|numeric|exists:addresses,id'
+    ]);
+
+    try {
+      $item = Address::find($data['id']);
+      Address::where('user_id', $item->user_id)->update(['is_main' => false]);
+
+      $item->update(['is_main' => true]);
       
       return response()->json(['updated' => $item], 200);
     } catch (\Throwable $th) {
