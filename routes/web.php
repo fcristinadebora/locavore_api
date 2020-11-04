@@ -52,6 +52,7 @@ $router->post('/favorites', ['as' => 'favorites.create', 'uses' => 'UserFavorite
 $router->delete('/favorites/{id}', ['as' => 'favorites.delete','uses' => 'UserFavoritesController@delete']);
 
 $router->get('/interests', ['as' => 'interests.get','uses' => 'InterestsController@get']);
+$router->get('/interests/compatible', ['as' => 'interests.getCompatible','uses' => 'InterestsController@getCompatible']);
 $router->post('/interests', ['as' => 'interests.create', 'uses' => 'InterestsController@create']);
 $router->delete('/interests/{id}', ['as' => 'interests.delete','uses' => 'InterestsController@delete']);
 

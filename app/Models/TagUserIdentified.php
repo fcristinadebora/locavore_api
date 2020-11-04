@@ -21,4 +21,8 @@ class TagUserIdentified extends Model
     public function tag(){
         return $this->belongsTo('App\Models\Tag', 'tag_id', 'id');
     }
+
+    public function grower(){
+        return $this->belongsTo('App\Models\GrowerUser', 'user_id', 'id')->where('is_grower', true);
+    }
 }

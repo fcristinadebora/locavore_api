@@ -14,4 +14,12 @@ class Tag extends Model
     protected $fillable = [
         'description'
     ];
+
+    public function products(){
+        return $this->hasMany('App\Models\ProductTag', 'tag_id', 'id');
+    }
+
+    public function growers(){
+        return $this->hasMany('App\Models\TagUserIdentified', 'tag_id', 'id');
+    }
 }

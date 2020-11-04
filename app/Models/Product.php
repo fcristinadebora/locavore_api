@@ -24,7 +24,7 @@ class Product extends Model
     }
 
     public function grower(){
-        return $this->belongsTo('App\Models\GrowerUser', 'user_id', 'id');
+        return $this->belongsTo('App\Models\GrowerUser', 'user_id', 'id')->where('is_grower', true);
     }
 
     public function tags(){

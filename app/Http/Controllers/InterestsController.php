@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Tag;
 use App\Models\TagUserInterested;
 use App\Models\Product;
+use App\Models\User;
 
 class InterestsController extends Controller
 {
@@ -75,5 +76,59 @@ class InterestsController extends Controller
         'trace' => $th->getTrace()
       ], 500);
     }
+  }
+
+  public function getCompatible(Request $request)
+  {
+    $user = User::with(['addresses' => function ($query) use ($request) {
+      $query->where('is_main', true);
+    }])->find($request->get('user_id'));
+
+      $interests = TagUserInterested::select('tag_id')
+        ->where('user_id', $request->get('user_id'))
+        ->with(['tag.products' => function ($query) use ($user) {
+          $query->with('product.grower.addresses');
+          $query->with('product.tags.tag');
+          $query->with('product.images.image');
+
+          $query->whereHas('product.grower');
+
+          if(count($user->addresses)){
+            $query->whereHas('product.grower.addresses', function ($query) use ($user){
+              $query->where('city',$user->addresses[0]->city);
+            });
+          }
+
+          $query->orderByRaw('RAND()')->limit(6);
+        }])
+        ->with(['tag.growers.grower' => function ($query) use ($user) {
+          if(count($user->addresses)){
+            $query->whereHas('addresses', function ($query) use ($user){
+              $query->where('city',$user->addresses[0]->city);
+            });
+          }
+
+          $query->with('identificationTags.tag');
+          $query->with('addresses');
+          $query->with('images.image');
+          
+          $query->orderByRaw('RAND()')->limit(6);
+        }])
+        ->get();     
+      
+      $data = [
+        'products' => $interests->map(function ($item) {
+          return $item->tag->products->map(function ($prod) {
+            return $prod->product;
+          });
+        }),
+        'growers' => $interests->map(function ($item) {
+          return $item->tag->growers->map(function ($prod) {
+            return $prod->grower;
+          });
+        }),
+      ];
+
+      return response()->json(['items' => $data], 200);
   }
 }
