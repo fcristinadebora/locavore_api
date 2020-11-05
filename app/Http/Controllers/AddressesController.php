@@ -68,7 +68,11 @@ class AddressesController extends Controller
         $items = $items->where('user_id', $request->get('user_id'));
       }
 
-      $items = $items->paginate();
+      if($request->get('all')){
+        $items = $items->get();
+      }else{
+        $items = $items->paginate();
+      }
 
       return response()->json($items, 200);
     } catch (\Throwable $th) {

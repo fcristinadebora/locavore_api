@@ -84,51 +84,111 @@ class InterestsController extends Controller
       $query->where('is_main', true);
     }])->find($request->get('user_id'));
 
-      $interests = TagUserInterested::select('tag_id')
-        ->where('user_id', $request->get('user_id'))
-        ->with(['tag.products' => function ($query) use ($user) {
-          $query->with('product.grower.addresses');
-          $query->with('product.tags.tag');
-          $query->with('product.images.image');
+    $interests = TagUserInterested::select('tag_id')
+      ->where('user_id', $request->get('user_id'))
+      ->has('tag.products.product')
+      ->with(['tag.products' => function ($query) use ($user) {
+        $query->with(['product.grower.addresses' => function ($query) use ($user) {
+          $query->select('*');
 
-          $query->whereHas('product.grower');
-
-          if(count($user->addresses)){
-            $query->whereHas('product.grower.addresses', function ($query) use ($user){
-              $query->where('city',$user->addresses[0]->city);
-            });
+          if (count($user->addresses)) {
+            $query->addSelect(DB::raw("(
+                6371 *
+                acos(cos(radians(" . $user->addresses[0]->lat . ")) * 
+                cos(radians(addresses.lat)) * 
+                cos(radians(addresses.long) - 
+                radians(" . $user->addresses[0]->long . ")) + 
+                sin(radians(" . $user->addresses[0]->lat . ")) * 
+                sin(radians(addresses.lat)))
+            ) AS distance "));
+          } else {
+            $query->addSelect(DB::raw("null as distance"));
           }
+        }]);
+        $query->with('product.tags.tag');
+        $query->with('product.images.image');
+        $query->with('product.productCategory');
 
-          $query->orderByRaw('RAND()')->limit(6);
-        }])
-        ->with(['tag.growers.grower' => function ($query) use ($user) {
-          if(count($user->addresses)){
-            $query->whereHas('addresses', function ($query) use ($user){
-              $query->where('city',$user->addresses[0]->city);
-            });
+        $query->whereHas('product.grower');
+
+        if (count($user->addresses)) {
+          $query->whereHas('product.grower.addresses', function ($query) use ($user) {
+            $query->where('city', $user->addresses[0]->city);
+          });
+        }
+
+        $query->orderByRaw('RAND()')->limit(6);
+      }])
+      ->with(['tag.growers.grower' => function ($query) use ($user) {
+        if (count($user->addresses)) {
+          $query->whereHas('addresses', function ($query) use ($user) {
+            $query->where('city', $user->addresses[0]->city);
+          });
+        }
+
+        $query->with('identificationTags.tag');
+        $query->with(['addresses' => function ($query) use ($user) {
+          $query->select('*');
+
+          if (count($user->addresses)) {
+            $query->addSelect(DB::raw("(
+                6371 *
+                acos(cos(radians(" . $user->addresses[0]->lat . ")) * 
+                cos(radians(addresses.lat)) * 
+                cos(radians(addresses.long) - 
+                radians(" . $user->addresses[0]->long . ")) + 
+                sin(radians(" . $user->addresses[0]->lat . ")) * 
+                sin(radians(addresses.lat)))
+            ) AS distance "));
+          } else {
+            $query->addSelect(DB::raw("null as distance"));
           }
+        }]);
+        $query->with('images.image');
+        $query->with('productCategories.productCategory');
 
-          $query->with('identificationTags.tag');
-          $query->with('addresses');
-          $query->with('images.image');
-          
-          $query->orderByRaw('RAND()')->limit(6);
-        }])
-        ->get();     
-      
-      $data = [
-        'products' => $interests->map(function ($item) {
-          return $item->tag->products->map(function ($prod) {
-            return $prod->product;
-          });
-        }),
-        'growers' => $interests->map(function ($item) {
-          return $item->tag->growers->map(function ($prod) {
-            return $prod->grower;
-          });
-        }),
-      ];
+        $query->orderByRaw('RAND()')->limit(6);
+      }])
+      ->get();
 
-      return response()->json(['items' => $data], 200);
+    $products = [];
+    $growers = [];
+
+    foreach ($interests as $interest) {
+      foreach ($interest->tag->products as $product) {
+        $found = false;
+        foreach($products as $prod){
+          if($prod->id == $product->product->id){
+            $found = true;
+            continue;
+          }
+        }
+
+        if(!$found){
+          array_push($products, $product->product);
+        }
+      }
+
+      foreach ($interest->tag->growers as $grower) {
+        $found = false;
+        foreach($growers as $grow){
+          if($grow->id == $grower->grower->id){
+            $found = true;
+            continue;
+          }
+        }
+
+        if(!$found){
+          array_push($growers, $grower->grower);
+        }
+      }
+    }
+
+    $data = [
+      'products' => $products,
+      'growers' => $growers
+    ];
+
+    return response()->json(['items' => $data], 200);
   }
 }
