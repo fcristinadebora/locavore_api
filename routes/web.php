@@ -36,6 +36,8 @@ $router->get('/product-categories', [
     'uses' => 'ProductCategoriesController@get'
 ]);
 
+$router->post('/feedbacks', ['as' => 'feedbacks.create', 'uses' => 'FeedbacksController@create']);
+
 $router->get('/growers', ['as' => 'growers.get','uses' => 'GrowersController@get']);
 $router->get('/growers/{id}', ['as' => 'growers.show','uses' => 'GrowersController@show']);
 

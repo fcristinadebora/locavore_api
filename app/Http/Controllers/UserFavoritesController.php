@@ -9,16 +9,36 @@ class UserFavoritesController extends Controller
 {
     public function get(Request $request){
             $items = UserFavorite::where('user_id', $request->get('user_id'))->with([
-                'favoriteUser' => function ($query) use ($request) {
-                    if($request->get('with_address')){
-                        $query->with('addresses');
+                    'favoriteUser' => function ($query) use ($request) {
+                        if($request->get('with_address')){
+                            $query->with('addresses');
+                        }
+            
+                        if($request->get('with_categories')){
+                            $query->with('productCategories.productCategory');
+                        }
                     }
-        
-                    if($request->get('with_categories')){
-                        $query->with('productCategories.productCategory');
+                ])
+                ->whereHas('favoriteUser.addresses', function ($query) use ($request) {
+                    if ($request->get('lat') && $request->get('long') && $request->get('max_distance')) {
+                        $lat = $request->get('lat');
+                        $long = $request->get('long');
+
+                        $distanceStatement = "(6371 *
+                            acos(cos(radians($lat)) * 
+                            cos(radians(addresses.lat)) * 
+                            cos(radians(addresses.long) - 
+                            radians($long)) + 
+                            sin(radians($lat)) * 
+                            sin(radians(addresses.lat))))";
+                        
+                        $query->whereRaw("$distanceStatement <= " . $request->get('max_distance'));
                     }
-                }
-            ]);
+                });
+
+            if ($request->get('ignorable_ids') && count($request->get('ignorable_ids')) > 0) {
+                $items = $items->whereNotIn('id', $request->get('ignorable_ids'));
+            }
 
             if($request->get('paginated')){
                 $items = $items->paginate();

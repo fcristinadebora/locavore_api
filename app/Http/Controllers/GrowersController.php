@@ -47,19 +47,20 @@ class GrowersController extends Controller
             $growers = $growers->where('addresses.state', $request->get('state'));
         }
 
+        $distanceStatement = '0';
         if ($request->get('lat') && $request->get('long')) {
             $lat = $request->get('lat');
             $long = $request->get('long');
 
-            $growers = $growers->addSelect(DB::raw("(
-                            6371 *
-                            acos(cos(radians($lat)) * 
-                            cos(radians(addresses.lat)) * 
-                            cos(radians(addresses.long) - 
-                            radians($long)) + 
-                            sin(radians($lat)) * 
-                            sin(radians(addresses.lat)))
-                        ) AS distance "));
+            $distanceStatement = "(6371 *
+            acos(cos(radians($lat)) * 
+            cos(radians(addresses.lat)) * 
+            cos(radians(addresses.long) - 
+            radians($long)) + 
+            sin(radians($lat)) * 
+            sin(radians(addresses.lat))))";
+
+            $growers = $growers->addSelect(DB::raw("$distanceStatement AS distance "));
 
             if ($request->get('order_by') == 'distance') {
                 $growers = $growers->orderBy('distance', 'asc');
@@ -69,13 +70,23 @@ class GrowersController extends Controller
         }
 
         if ($request->get('order_by') == 'distance') {
-            $growers->addSelect("addresses.street", "addresses.number", "addresses.district", "addresses.number", "addresses.name as addr_name", "addresses.lat", "addresses.long");
+            $growers->addSelect("addresses.street", "addresses.number", "addresses.district", "addresses.number", "addresses.city", "addresses.name as addr_name", "addresses.lat", "addresses.long");
             $growers = $growers->orderBy('users.name', 'desc');
         } else {
             $growers = $growers->orderBy('users.id', 'desc');
         }
 
-        $growers = $growers->paginate();
+        if ($request->get('max_distance')) {
+            $growers->whereRaw("$distanceStatement <= " . $request->get('max_distance'));
+            
+            if ($request->get('ignorable_ids') && count($request->get('ignorable_ids')) > 0) {
+                $growers->whereNotIn('users.id', $request->get('ignorable_ids'));
+            }
+
+            $growers = $growers->get();
+        } else {
+            $growers = $growers->paginate();
+        }        
 
         return response()->json($growers, 200);
         // } catch (\Exception $th) {

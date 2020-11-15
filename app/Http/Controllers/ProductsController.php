@@ -72,19 +72,20 @@ class ProductsController extends Controller
             $products = $products->where('addresses.state', $request->get('state'));
         }
 
+        $distanceStatement = '0';
         if ($request->get('lat') && $request->get('long')) {
             $lat = $request->get('lat');
             $long = $request->get('long');
 
-            $products = $products->addSelect(DB::raw("(
-                            6371 *
-                            acos(cos(radians($lat)) * 
-                            cos(radians(addresses.lat)) * 
-                            cos(radians(addresses.long) - 
-                            radians($long)) + 
-                            sin(radians($lat)) * 
-                            sin(radians(addresses.lat)))
-                        ) AS distance "));
+            $distanceStatement = "(6371 *
+            acos(cos(radians($lat)) * 
+            cos(radians(addresses.lat)) * 
+            cos(radians(addresses.long) - 
+            radians($long)) + 
+            sin(radians($lat)) * 
+            sin(radians(addresses.lat))))";
+
+            $products = $products->addSelect(DB::raw("$distanceStatement AS distance "));
 
             if ($request->get('order_by') == 'distance') {
                 $products = $products->orderBy('distance', 'asc');
@@ -112,7 +113,17 @@ class ProductsController extends Controller
             );
         }
 
-        $products = $products->paginate();
+        if ($request->get('max_distance')) {
+            $products->whereRaw("$distanceStatement <= " . $request->get('max_distance'));
+            
+            if ($request->get('ignorable_ids') && count($request->get('ignorable_ids')) > 0) {
+                $products->whereNotIn('users.id', $request->get('ignorable_ids'));
+            }
+
+            $products = $products->get();
+        } else {
+            $products = $products->paginate();
+        }        
 
         return response()->json($products, 200);
         // } catch (\Exception $th) {
