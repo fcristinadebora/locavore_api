@@ -72,6 +72,10 @@ $router->post('/contacts', ['as' => 'contacts.create', 'uses' => 'ContactsContro
 $router->put('/contacts/{id}', ['as' => 'contacts.update','uses' => 'ContactsController@update']);
 $router->delete('/contacts/{id}', ['as' => 'contacts.delete','uses' => 'ContactsController@delete']);
 
+$router->get('/ratings', ['as' => 'ratings.get', 'uses' => 'RatingsController@get']);
+$router->get('/ratings/avg', ['as' => 'ratings.avg', 'uses' => 'RatingsController@avg']);
+$router->post('/ratings', ['as' => 'ratings.create', 'uses' => 'RatingsController@create']);
+
 $router->group([
     'middleware' => 'jwt.auth:user'
 ], function () use ($router) {
